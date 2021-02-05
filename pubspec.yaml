@@ -35,6 +35,10 @@ dependencies:
   gesture_recognition: 1.0.1
   #抖动动画
   shake_animation_widget: ^1.0.0
+  #网络请求  Dart的一个强大的Http客户端，支持拦截器、全局配置、FormData、请求取消、文件下载、超时等。
+  dio: ^3.0.10
+  #Toast 弹窗
+  fluttertoast: ^7.1.6
 
 dev_dependencies:
   flutter_test:
