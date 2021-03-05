@@ -21,12 +21,11 @@ class GestureEditState extends State {
 
   Color strHintColor = Color(0xFF333333);
 
+  ///缓存类
   SharedPreferences prefs;
 
-  ///缓存类
-  ShakeAnimationController _shakeAnimationController;
-
   ///抖动动画控制器
+  ShakeAnimationController _shakeAnimationController;
 
   @override
   void initState() {
@@ -189,7 +188,7 @@ class GestureEditState extends State {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(top: 35,bottom: 35),
+                    padding: EdgeInsets.only(top: 35, bottom: 35),
                     child: Center(
                       child: Text("重设手势密码"),
                     ),

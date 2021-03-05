@@ -39,6 +39,16 @@ dependencies:
   dio: ^3.0.10
   #Toast 弹窗
   fluttertoast: ^7.1.6
+  #多环境搭建
+  provider: ^4.0.5
+  #时间转换工具
+  date_format: ^1.0.9
+  #获取App相关信息
+  package_info: ^0.4.0+4
+  #获取设备信息
+  device_info: ^0.4.0+1
+  #MD5加密
+  crypto: ^2.0.6
 
 dev_dependencies:
   flutter_test:
