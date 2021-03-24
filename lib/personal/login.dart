@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_demo/network/httputil.dart';
+import 'package:flutter_demo/network/spersonnel/spersonnelurl.dart';
 import 'package:flutter_demo/start/gesture_edit.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +27,7 @@ class _LoginHomePageState extends State<LoginHomePage> {
   Color bgColor = Color(0xffe8e8e8);
   Color textColor = Color(0xff999999);
   SharedPreferences prefs;
-  bool isHide = true;
+  bool isHide = false;
 
   void getSp() async {
     prefs = await SharedPreferences.getInstance();
@@ -198,19 +199,22 @@ class _LoginHomePageState extends State<LoginHomePage> {
                                       ),
                                   onPressed: () {
                                     print('点击了');
-                                    login("", "");
-                                    FocusScope.of(context)
-                                        .requestFocus(new FocusNode());
+                                    login(username, password);
+                                    // FocusScope.of(context)
+                                    //     .requestFocus(new FocusNode());
                                     // print(nameController.text);
                                     // print(pwdController.text);
-                                    if (clickEnabled) {
-                                      Navigator.push(context,
-                                          MaterialPageRoute(builder: (context) {
-                                        return GestureEdit();
-                                      }));
-                                    } else {
-                                      return null;
-                                    }
+
+                                    // if (clickEnabled) {
+                                    //   Navigator.push(context,
+                                    //       MaterialPageRoute(builder: (context) {
+                                    //     return GestureEdit();
+                                    //   }));
+                                    // } else {
+                                    //   return null;
+                                    // }
+
+
                                     // if ((formKey.currentState as FormState)
                                     //     .validate()) {
                                     // }
@@ -256,7 +260,7 @@ class _LoginHomePageState extends State<LoginHomePage> {
                   Container(
                     child: Center(
                       child: Offstage(
-                        offstage: false,
+                        offstage: !isHide, //false 显示，true 隐藏
                         child: SizedBox(
                           child: CircularProgressIndicator(),
                           height: 44.0,
@@ -276,35 +280,33 @@ class _LoginHomePageState extends State<LoginHomePage> {
 
   //用户名和密码登录
   login(String username, String password) async {
-    // try {
-    //   Response response = await Dio().get("http://www.google.com");
-    //   print(response);
-    // } catch (e) {
-    //   print(e);
-    // }
-
     var path = "https://www.wanandroid.com/user/register";
-    FormData formData = new FormData.fromMap(
-        {"username": "aa112233", "password": "123456", "repassword": "123456"});
-    // HttpUtil()
-    //     .post(url, data: formData)
-    //     .then((result) {
-    //   setState(() {
-    //     content = result.data.toString();
-    //   });
-    // };
-
-    Response response = await HttpUtil.getInstance().post(path, data: formData,
+    FormData formData = new FormData.fromMap({"EmpNo": username, "Pwd": password, "SmsCode": "0"});
+    Map map = Map();
+    map["EmpNo"] = username;
+    map["Pwd"] = password;
+    map["SmsCode"] = "0";
+    Response response = await HttpUtil.getInstance().httpLoginForMobile(SPersonnelURL.LoginForMobile, data: map,
         onSendProgress: (int count, int total) {
       print("$count------$total");
       setState(() {
         if (count != total) {
-          isHide = false;
-        } else {
           isHide = true;
+        } else {
+          isHide = false;
         }
       });
-    });
+    },
+      onSuccess:(String str) {
+
+      },
+      onError: (String msg){
+          Fluttertoast.showToast(msg: msg);
+     }
+
+
+
+    );
 
     setState(() {
       content = response.toString();

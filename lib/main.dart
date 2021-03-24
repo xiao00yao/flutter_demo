@@ -5,7 +5,10 @@ import 'package:flutter_demo/pub/andutils.dart';
 import 'package:flutter_demo/pub/catch.dart';
 import 'package:flutter_demo/pub/spUtils.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'network/spersonnel/httpspersonnel.dart';
 
 void main() {
   runApp(MyApp());
@@ -181,5 +184,14 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     });
     //动画开始
     controller.forward(); //开始动画
+
+    HttpSPersonnel().httpGetConfig<String>(
+        onSuccess: (String str){
+      Fluttertoast.showToast(msg: str);
+    },
+    onError: (String errorMsg){
+      Fluttertoast.showToast(msg: errorMsg);
+    }
+    );
   }
 }
