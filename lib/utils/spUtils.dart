@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SpKey{
+class SpUtil{
     static String IsGuidle = "isGuidle"; //是否需要引导，用于第一次安装
     static String Gesture = "Gesture";//手势密码是否设置
+
 
     ///存数据
     static SpPutValue(int type,String key,Object value) async {
@@ -32,5 +33,17 @@ class SpKey{
     static Future<SharedPreferences> getSharedPreferences() async {
         SharedPreferences prefs =  await SharedPreferences.getInstance();
         return prefs;
+    }
+    ///存储数据
+    static setSpStrValue(String key,dynamic value) async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        prefs.setString(key, value);
+    }
+    ///获取缓存数据
+    static Future<String> getSpStringValue(String key) async {
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        String string = prefs.getString(key);
+
+        return string;
     }
 }

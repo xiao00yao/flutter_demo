@@ -1,14 +1,17 @@
+import 'dart:convert';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_demo/personal/login.dart';
-import 'package:flutter_demo/pub/andutils.dart';
-import 'package:flutter_demo/pub/catch.dart';
-import 'package:flutter_demo/pub/spUtils.dart';
+import 'package:flutter_demo/utils/andutils.dart';
+import 'package:flutter_demo/utils/catch.dart';
+import 'package:flutter_demo/utils/spUtils.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'network/spersonnel/httpspersonnel.dart';
+import 'network/spersonnel/resultbean/config_entity.dart';
 
 void main() {
   runApp(MyApp());
@@ -186,8 +189,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     controller.forward(); //开始动画
 
     HttpSPersonnel().httpGetConfig<String>(
-        onSuccess: (String str){
-      Fluttertoast.showToast(msg: str);
+        onSuccess: (ConfigEntity config){
+      Fluttertoast.showToast(msg :json.encode(config));
     },
     onError: (String errorMsg){
       Fluttertoast.showToast(msg: errorMsg);

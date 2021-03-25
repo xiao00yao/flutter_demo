@@ -7,7 +7,10 @@ import 'package:date_format/date_format.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_demo/network/spersonnel/resultbean/loginformobier_entity.dart';
 import 'package:flutter_demo/network/spersonnel/spersonnelurl.dart';
+import 'package:flutter_demo/utils/catch.dart';
+import 'package:flutter_demo/utils/spUtils.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:package_info/package_info.dart';
 
@@ -16,7 +19,12 @@ class HttpUtil {
   String baseUrl = "https://guangdiu.com/api/";
   final String XID = "177a957400024123bd87e7756454c445";
   final String token = "249b9c90b0084cb4ade8b30ede5d9fce";
-   Dio dio;
+  var SendSMS = "http://wf.t.jjw.com:6000/SComm/API/Comm/SendSMS"; //发送短信
+  var CheckSMSCode =
+      "http://wf.t.jjw.com:6000/SComm/API/Comm/CheckSMSCode"; //校验码验证
+  var UpdateEmpMobileByAPP =
+      "http://wf.t.jjw.com:6000/SPersonnel//API/Employee/UpdateEmpMobileByAPP"; //修改手机号
+  Dio dio;
   BaseOptions options;
   static String versionName = "1.0.0+1";
   static String UUID = "3bb2fc527935b23";
@@ -54,18 +62,35 @@ class HttpUtil {
           "Authorization": Auth,
         });
 
-
     dio = Dio(options);
 
     dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (RequestOptions options) {
+      onRequest: (RequestOptions options) async {
         /*. 拦截器请求 时 相关处理*/
         print('上传接口：${options.uri}');
-        // ignore: unrelated_type_equality_checks
-        if(options.path==SPersonnelURL.LoginForMobile){
-            options.headers;
+        String spStringValue = await SpUtil.getSpStringValue(CacheConsts.LoginCookie);
+        if (spStringValue!=null&&spStringValue.isNotEmpty) {
+          List cookies = json.decode(spStringValue);
+          String cookieStr;
+          cookies.forEach((element) {
+            if (!options.path.contains(CheckSMSCode)) {
+              if (options.path.contains(UpdateEmpMobileByAPP)) {
+                // ignore: unnecessary_statements
+                cookieStr + element + ";";
+              } else {
+                if (element.contains("MsgCode")) {
+                  // ignore: unnecessary_statements
+                  cookieStr + element + ";";
+                }
+              }
+            } else {
+              // ignore: unnecessary_statements
+              cookieStr + element + ";";
+            }
+          });
+          options.headers["Cookie"] = cookieStr;//给请求头添加Cookie
         }
-        if(options.method=="POST"){
+        if (options.method == "POST") {
           Map hashMap = Map<String, String>();
           if (options.data is FormData) {
             FormData body = options.data as FormData;
@@ -73,28 +98,63 @@ class HttpUtil {
             body.fields.forEach((element) {
               hashMap[element.key] = element.value;
             });
-        }
+          }
           options.headers["ERPSignSecret"] = getSignNew(hashMap);
-        }else if(options.method == "GET"){
-            var headers = options.headers;
-            var queryParameters = options.queryParameters;
-            Map hashMap = Map<String, String>();
+        } else if (options.method == "GET") {
+          var headers = options.headers;
+          var queryParameters = options.queryParameters;
+          Map hashMap = Map<String, String>();
           queryParameters.forEach((key, value) {
             hashMap[key] = utf8.encode(value);
           });
           String signNew = getSignNew(hashMap);
-            options.headers["ERPSignSecret"] = getSignNew(hashMap);
-            print("请求头"+options.headers.toString());
+          options.headers["ERPSignSecret"] = getSignNew(hashMap);
+          print("请求头" + options.headers.toString());
         }
       },
-      onResponse: (e) {
-        if(e.request.path==SPersonnelURL.LoginForMobile){
+      onResponse: (e) async {
+        if (e.request.path == SPersonnelURL.LoginForMobile) {
+          var header = e.headers["set-cookie"];
+          if (header.isNotEmpty) {
+            String spStringValue = await  SpUtil.getSpStringValue(CacheConsts.LoginCookie); //获取缓存
 
+            List<String> cookies;
+            if (spStringValue!=null&&spStringValue.isNotEmpty) {
+              cookies = json.decode(spStringValue);
+            }
+
+            if (e.request.path.contains(SendSMS)) {
+              cookies.forEach((element) {
+                if (element.contains("MsgCode")) {
+                  cookies.remove(element);
+                }
+              });
+            } else {
+              cookies.forEach((element) {
+                if (element.contains("ERP")) {
+                  cookies.remove(element);
+                }
+              });
+            }
+            header.forEach((element) {
+              if (header.contains("ERP") || header.contains("MsgCode")) {
+                if (cookies.isNotEmpty) {
+                  cookies.insert(0, element);
+                } else {
+                  cookies.add(element);
+                }
+              }
+            });
+          }
+          if (e.headers["set-cookie"].isNotEmpty) {
+            Fluttertoast.showToast(
+                msg: "缓存" + e.headers["set-coolie"].toString());
+          }
         }
-        print("返回请求头："+e.headers.toString());
-          // if(e.headers["Set-Cookie"].isNotEmpty){
-          //   Fluttertoast.showToast(msg: "拿到Cookie了");
-          // }
+        print("返回请求头：" + e.headers.toString());
+        // if(e.headers["Set-Cookie"].isNotEmpty){
+        //   Fluttertoast.showToast(msg: "拿到Cookie了");
+        // }
         /* 拦截器 请求到数据后的 相关处理*/
         print('获取数据信息：$e');
       },
@@ -105,9 +165,9 @@ class HttpUtil {
       },
     ));
 
-
     ///代理  打版本是需注释掉 比较麻烦
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate = (client) {
+    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+        (client) {
       // config the http client
       client.findProxy = (uri) {
         //proxy all request to localhost:8888
@@ -116,34 +176,34 @@ class HttpUtil {
     };
   }
 
-   final String SecretKey = "E10ADC3949BA59ABBE56E057F20F883E";
+  final String SecretKey = "E10ADC3949BA59ABBE56E057F20F883E";
 
   ///获取签名新版
-  String getSignNew( Map<String, String> map) {
+  String getSignNew(Map<String, String> map) {
     var mMap = Map<String, String>();
     mMap["data"] = getSignData(map);
     mMap["secret"] = SecretKey;
     String str = "";
     mMap.forEach((key, value) {
-      str+=key + value;
+      str += key + value;
     });
     return md5.convert(utf8.encode(str)).toString();
-}
+  }
 
   //将map里面的key-value用=和&连接起来
-  String getSignData( Map<String, String> map) {
+  String getSignData(Map<String, String> map) {
     String str = "";
     map.forEach((key, value) {
-      str+=key+"="+value+"&";
+      str += key + "=" + value + "&";
     });
-    if(str.isNotEmpty){
-      str = str.substring(0,str.length);
+    if (str.isNotEmpty) {
+      str = str.substring(0, str.length);
     }
     return str;
-}
+  }
 
   ///获取App信息
-  String getPackgeInfo()  {
+  String getPackgeInfo() {
     PackageInfo.fromPlatform().then((PackageInfo packageInfo) {
       String appName = packageInfo.appName;
       String packageName = packageInfo.packageName;
@@ -201,38 +261,51 @@ class HttpUtil {
     }
   }
 
+  ///post请求
+  Future<Response> post(String url, {options, callBack, data}) async {
+    print("--------  $url  --------");
+    Response response;
+    try {
+      response = await dio.get(
+        url,
+      );
+      print("--------   " + response.toString());
+      return response;
+    } on DioError catch (e) {
+      if (CancelToken.isCancel(e)) {
+        print("取消 " + e.message);
+      } else {
+        print(e);
+      }
+      return null;
+    }
+  }
+
   ///post方法
   Future<Response> httpLoginForMobile<T>(
-      String url, {options,
-        callBack,
-        data,
-        onSendProgress,
-        Function(T) onSuccess,
-        Function(String error) onError,}) async {
-    print("*********  $url  *************")
-    ;
+    String url, {
+    option,//添加请求头信息
+    data,
+    onSendProgress,
+    Function(LoginformobierEntity) onSuccess,
+    Function(String error) onError,
+  }) async {
+    print("*********  $url  *************");
     Response response;
     try {
       response = await dio.post(
         url,
         data: data,
-        cancelToken: callBack,
-        options: options,
         onSendProgress: onSendProgress,
       );
       var responseData = response.data;
-      var i = responseData['Msg'];
-      if (responseData['Code'] == 0) {
-        onSuccess(responseData['Data']);
-      } else if (responseData['Code'] == 200) {
-        print('返回结果-->${responseData['Code']}');
-        onSuccess(responseData['Data']);
-      } else {
-        print('指向这里');
+      if(response.statusCode == HttpStatus.ok||response.statusCode == HttpStatus.created){
+        LoginformobierEntity mLoginformobierEntity = LoginformobierEntity().fromJson(responseData);
+        onSuccess(mLoginformobierEntity);
+      }else{
         onError(responseData['Msg']);
       }
-
-      print('post返回结果$i');
+      print('post返回结果$responseData');
 
       return response;
     } on DioError catch (e) {

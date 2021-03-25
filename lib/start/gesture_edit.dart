@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_demo/personal/index.dart';
-import 'package:flutter_demo/pub/andutils.dart';
+import 'package:flutter_demo/utils/andutils.dart';
 import 'package:gesture_recognition/gesture_view.dart';
 import 'package:shake_animation_widget/shake_animation_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
