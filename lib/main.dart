@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_demo/network/httpmethod.dart';
 import 'package:flutter_demo/personal/login.dart';
 import 'package:flutter_demo/utils/andutils.dart';
 import 'package:flutter_demo/utils/catch.dart';
@@ -10,8 +11,10 @@ import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'network/httputil.dart';
 import 'network/spersonnel/httpspersonnel.dart';
 import 'network/spersonnel/resultbean/config_entity.dart';
+import 'network/spersonnel/spersonnelurl.dart';
 
 void main() {
   runApp(MyApp());
@@ -188,13 +191,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     //动画开始
     controller.forward(); //开始动画
 
-    HttpSPersonnel().httpGetConfig<String>(
-        onSuccess: (ConfigEntity config){
-      Fluttertoast.showToast(msg :json.encode(config));
-    },
-    onError: (String errorMsg){
-      Fluttertoast.showToast(msg: errorMsg);
-    }
-    );
+    // HttpSPersonnel().httpGetConfig<String>(
+    //     onSuccess: (ConfigEntity config){
+    //   Fluttertoast.showToast(msg :json.encode(config));
+    // },
+    // onError: (String errorMsg){
+    //   Fluttertoast.showToast(msg: errorMsg);
+    // }
+    // );
+   HttpUtil.getInstance().http(SPersonnelURL.GetConfig, HttpMethod.GET,
+      onSuccess:(dynamic str) {
+        ConfigEntity().fromJson(str);
+        Fluttertoast.showToast(msg: "获取到系统配置项"+json.encode(str));
+      }
+   );
   }
 }

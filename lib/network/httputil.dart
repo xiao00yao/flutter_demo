@@ -7,6 +7,7 @@ import 'package:date_format/date_format.dart';
 import 'package:device_info/device_info.dart';
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter_demo/network/httpmethod.dart';
 import 'package:flutter_demo/network/spersonnel/resultbean/loginformobier_entity.dart';
 import 'package:flutter_demo/network/spersonnel/spersonnelurl.dart';
 import 'package:flutter_demo/utils/catch.dart';
@@ -68,27 +69,28 @@ class HttpUtil {
       onRequest: (RequestOptions options) async {
         /*. 拦截器请求 时 相关处理*/
         print('上传接口：${options.uri}');
-        String spStringValue = await SpUtil.getSpStringValue(CacheConsts.LoginCookie);
-        if (spStringValue!=null&&spStringValue.isNotEmpty) {
-          List cookies = json.decode(spStringValue);
-          String cookieStr;
-          cookies.forEach((element) {
-            if (!options.path.contains(CheckSMSCode)) {
-              if (options.path.contains(UpdateEmpMobileByAPP)) {
-                // ignore: unnecessary_statements
-                cookieStr + element + ";";
-              } else {
-                if (element.contains("MsgCode")) {
-                  // ignore: unnecessary_statements
-                  cookieStr + element + ";";
-                }
-              }
-            } else {
-              // ignore: unnecessary_statements
-              cookieStr + element + ";";
-            }
-          });
-          options.headers["Cookie"] = cookieStr;//给请求头添加Cookie
+        String spStringValue =
+            await SpUtil.getSpStringValue(CacheConsts.LoginCookie);
+        if (spStringValue != null && spStringValue.isNotEmpty) {
+          String cookies = json.decode(spStringValue);
+          // String cookieStr;
+          // cookies.forEach((element) {
+          //   if (!options.path.contains(CheckSMSCode)) {
+          //     if (options.path.contains(UpdateEmpMobileByAPP)) {
+          //
+          //       cookieStr + element + ";";
+          //     } else {
+          //       if (element.contains("MsgCode")) {
+          //
+          //         cookieStr + element + ";";
+          //       }
+          //     }
+          //   } else {
+          //
+          //     cookieStr + element + ";";
+          //   }
+          // });
+          options.headers["Cookie"] = cookies; //给请求头添加Cookie
         }
         if (options.method == "POST") {
           Map hashMap = Map<String, String>();
@@ -105,7 +107,8 @@ class HttpUtil {
           var queryParameters = options.queryParameters;
           Map hashMap = Map<String, String>();
           queryParameters.forEach((key, value) {
-            hashMap[key] = utf8.encode(value);
+            // hashMap[key] = utf8.encode(value);
+            hashMap[key] = value;
           });
           String signNew = getSignNew(hashMap);
           options.headers["ERPSignSecret"] = getSignNew(hashMap);
@@ -114,37 +117,39 @@ class HttpUtil {
       },
       onResponse: (e) async {
         if (e.request.path == SPersonnelURL.LoginForMobile) {
-          var header = e.headers["set-cookie"];
+          List<String> header = e.headers["set-cookie"];
           if (header.isNotEmpty) {
-            String spStringValue = await  SpUtil.getSpStringValue(CacheConsts.LoginCookie); //获取缓存
+            String spStringValue = await SpUtil.getSpStringValue(CacheConsts.LoginCookie); //获取缓存
 
-            List<String> cookies;
-            if (spStringValue!=null&&spStringValue.isNotEmpty) {
-              cookies = json.decode(spStringValue);
-            }
+            // List<String> cookies = new List();
+            // // if (spStringValue != null && spStringValue.isNotEmpty) {
+            // //   cookies = json.decode(spStringValue);
+            // // }
+            //
+            // if (e.request.path.contains(SendSMS)) {
+            //   cookies.forEach((element) {
+            //     if (element.contains("MsgCode")) {
+            //       cookies.remove(element);
+            //     }
+            //   });
+            // } else {
+            //   cookies.forEach((element) {
+            //     if (element.contains("ERP")) {
+            //       cookies.remove(element);
+            //     }
+            //   });
+            // }
+            // header.forEach((element) {
+            //   if (element.contains("ERP") || element.contains("MsgCode")) {
+            //     if (cookies.length>0) {
+            //       cookies.insert(0, element);
+            //     } else {
+            //       cookies.add(element);
+            //     }
+            //   }
+            // });
 
-            if (e.request.path.contains(SendSMS)) {
-              cookies.forEach((element) {
-                if (element.contains("MsgCode")) {
-                  cookies.remove(element);
-                }
-              });
-            } else {
-              cookies.forEach((element) {
-                if (element.contains("ERP")) {
-                  cookies.remove(element);
-                }
-              });
-            }
-            header.forEach((element) {
-              if (header.contains("ERP") || header.contains("MsgCode")) {
-                if (cookies.isNotEmpty) {
-                  cookies.insert(0, element);
-                } else {
-                  cookies.add(element);
-                }
-              }
-            });
+            SpUtil.setSpStrValue(CacheConsts.LoginCookie, json.encode(header[0]));
           }
           if (e.headers["set-cookie"].isNotEmpty) {
             Fluttertoast.showToast(
@@ -156,7 +161,7 @@ class HttpUtil {
         //   Fluttertoast.showToast(msg: "拿到Cookie了");
         // }
         /* 拦截器 请求到数据后的 相关处理*/
-        print('获取数据信息：$e');
+        // print('获取数据信息：$e');
       },
       onError: (e) {
         // Navigator.pop(Router.navigatorState.currentState.context);
@@ -262,14 +267,49 @@ class HttpUtil {
   }
 
   ///post请求
-  Future<Response> post(String url, {options, callBack, data}) async {
-    print("--------  $url  --------");
+  Future<Response> http(String url,String httpMethod,
+      {options,
+      data,
+      callBack,
+      onSendProgress,
+      Function(dynamic) onSuccess,
+      Function(dynamic,int) onSuccessByCode,
+      Function(String) onError}) async {
     Response response;
     try {
-      response = await dio.get(
-        url,
-      );
+      switch(httpMethod){
+        case "POST":
+          response = await dio.post<String>(
+              url,
+              data: data,
+              onSendProgress: onSendProgress,
+          );
+          break;
+        case "GET":
+          response = await dio.get<String>(
+              url,
+            queryParameters: data
+          );
+          break;
+          default:
+            break;
+
+      }
       print("--------   " + response.toString());
+      if (response.statusCode == HttpStatus.ok || response.statusCode == HttpStatus.created) {
+        int code = json.decode(response.data)['Code'];
+        switch (code) {
+          case 2000:
+            onSuccess(json.decode(response.data));
+            break;
+          default:
+            onSuccess(json.decode(response.data));
+            Fluttertoast.showToast(msg: response.data['Msg']);
+            break;
+        }
+      }else{
+        onError("请求接口失败");
+      }
       return response;
     } on DioError catch (e) {
       if (CancelToken.isCancel(e)) {
@@ -284,7 +324,7 @@ class HttpUtil {
   ///post方法
   Future<Response> httpLoginForMobile<T>(
     String url, {
-    option,//添加请求头信息
+    option, //添加请求头信息
     data,
     onSendProgress,
     Function(LoginformobierEntity) onSuccess,
@@ -299,10 +339,12 @@ class HttpUtil {
         onSendProgress: onSendProgress,
       );
       var responseData = response.data;
-      if(response.statusCode == HttpStatus.ok||response.statusCode == HttpStatus.created){
-        LoginformobierEntity mLoginformobierEntity = LoginformobierEntity().fromJson(responseData);
+      if (response.statusCode == HttpStatus.ok ||
+          response.statusCode == HttpStatus.created) {
+        LoginformobierEntity mLoginformobierEntity =
+            LoginformobierEntity().fromJson(responseData);
         onSuccess(mLoginformobierEntity);
-      }else{
+      } else {
         onError(responseData['Msg']);
       }
       print('post返回结果$responseData');

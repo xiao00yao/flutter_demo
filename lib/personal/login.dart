@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_demo/network/httpmethod.dart';
 import 'package:flutter_demo/network/httputil.dart';
 import 'package:flutter_demo/network/spersonnel/resultbean/loginformobier_entity.dart';
 import 'package:flutter_demo/network/spersonnel/spersonnelurl.dart';
@@ -290,9 +291,35 @@ class _LoginHomePageState extends State<LoginHomePage> {
     map["Pwd"] = password;
     map["SmsCode"] = "0";
     SpUtil.setSpStrValue(CacheConsts.LoginEmpNo, username); //缓存用户名
-    Response response = await HttpUtil.getInstance()
-        .httpLoginForMobile(SPersonnelURL.LoginForMobile, data: map,
-            onSendProgress: (int count, int total) {
+    // Response response = await HttpUtil.getInstance()
+    //     .httpLoginForMobile(SPersonnelURL.LoginForMobile, data: map,
+    //         onSendProgress: (int count, int total) {
+    //   print("$count------$total");
+    //   setState(() {
+    //     if (count != total) {
+    //       isHide = true;
+    //     } else {
+    //       isHide = false;
+    //     }
+    //   });
+    // }, onSuccess: (LoginformobierEntity mLoginformobierEntity) {
+    //
+    //   switch (mLoginformobierEntity.code) {
+    //     case 2000:
+    //       SpUtil.setSpStrValue(CacheConsts.LoginPassword, password); //缓存密码
+    //       SpUtil.setSpStrValue(CacheConsts.LoginEmpInfoBean, json.encode(mLoginformobierEntity));//缓存登录信息
+    //       loginsuccess();
+    //       break;
+    //
+    //     default:
+    //       break;
+    //   }
+    // }, onError: (String msg) {
+    //   Fluttertoast.showToast(msg: msg);
+    // });
+
+    HttpUtil.getInstance().http(SPersonnelURL.LoginForMobile, HttpMethod.POST,data: map,
+        onSendProgress: (int count, int total) {
       print("$count------$total");
       setState(() {
         if (count != total) {
@@ -301,30 +328,41 @@ class _LoginHomePageState extends State<LoginHomePage> {
           isHide = false;
         }
       });
-    }, onSuccess: (LoginformobierEntity mLoginformobierEntity) {
-
-      switch (mLoginformobierEntity.code) {
-        case 2000:
+    },
+        onSuccess:(dynamic str) {
+          LoginformobierEntity mLoginformobierEntity = LoginformobierEntity().fromJson(str);
+          Fluttertoast.showToast(msg: "获取到登录返回信息："+json.encode(str));
           SpUtil.setSpStrValue(CacheConsts.LoginPassword, password); //缓存密码
-          SpUtil.setSpStrValue(CacheConsts.LoginEmpInfoBean, json.encode(mLoginformobierEntity));//缓存登录信息
+          SpUtil.setSpStrValue(CacheConsts.LoginEmpInfoBean, json.encode(str));//缓存登录信息
           loginsuccess();
-          break;
+        },
+      onSuccessByCode: (dynamic str,int code){
 
-        default:
-          break;
       }
-    }, onError: (String msg) {
-      Fluttertoast.showToast(msg: msg);
-    });
+    );
 
-    setState(() {
-      content = response.toString();
-      print("返回结果$content");
-    });
   }
 
   //登录成功
   void loginsuccess() {
 
+    Map map = Map<String, dynamic>();
+    map["platForm"] = "1";
+      HttpUtil.getInstance().http( /// 获取体系配置信息
+          SPersonnelURL.GetSystemTagConfig,
+          HttpMethod.GET,
+          data: {"platForm": "1"},
+          onSuccess: (dynamic str){
+            SpUtil.setSpStrValue(CacheConsts.LoginSystemTagConfig, json.encode(str));//保存体系配置信息
+            HttpUtil.getInstance().http(///获取人员菜单权限
+                  SPersonnelURL.GetEmpNavMenuList,
+                  HttpMethod.GET,
+                  data: {"platForm": "1"},
+                  onSuccess: (dynamic str){
+
+                  }
+                );
+          }
+      );
   }
 }
