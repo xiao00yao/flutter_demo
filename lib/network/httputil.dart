@@ -273,7 +273,6 @@ class HttpUtil {
       callBack,
       onSendProgress,
       Function(dynamic) onSuccess,
-      Function(dynamic,int) onSuccessByCode,
       Function(String) onError}) async {
     Response response;
     try {

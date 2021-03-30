@@ -8,6 +8,7 @@ import 'package:flutter_demo/network/httpmethod.dart';
 import 'package:flutter_demo/network/httputil.dart';
 import 'package:flutter_demo/network/spersonnel/resultbean/loginformobier_entity.dart';
 import 'package:flutter_demo/network/spersonnel/spersonnelurl.dart';
+import 'file:///E:/FlutterDemo/flutter_demo/lib/index/index.dart';
 import 'package:flutter_demo/start/gesture_edit.dart';
 import 'package:flutter_demo/utils/catch.dart';
 import 'package:flutter_demo/utils/spUtils.dart';
@@ -336,9 +337,6 @@ class _LoginHomePageState extends State<LoginHomePage> {
           SpUtil.setSpStrValue(CacheConsts.LoginEmpInfoBean, json.encode(str));//缓存登录信息
           loginsuccess();
         },
-      onSuccessByCode: (dynamic str,int code){
-
-      }
     );
 
   }
@@ -359,7 +357,8 @@ class _LoginHomePageState extends State<LoginHomePage> {
                   HttpMethod.GET,
                   data: {"platForm": "1"},
                   onSuccess: (dynamic str){
-
+                    SpUtil.setSpBoolValue(CacheConsts.LoginStatus, value: true);//标记登录状态
+                    Navigator.of(context).pushReplacementNamed("index"); //跳转后无返回
                   }
                 );
           }

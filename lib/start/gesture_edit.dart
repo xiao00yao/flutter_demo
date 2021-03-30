@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_demo/personal/index.dart';
+import 'file:///E:/FlutterDemo/flutter_demo/lib/index/index.dart';
 import 'package:flutter_demo/utils/andutils.dart';
 import 'package:gesture_recognition/gesture_view.dart';
 import 'package:shake_animation_widget/shake_animation_widget.dart';

@@ -10,7 +10,7 @@ import 'package:flutter_demo/utils/spUtils.dart';
 import 'package:flutter_swiper/flutter_swiper.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'file:///E:/FlutterDemo/flutter_demo/lib/index/index.dart';
 import 'network/httputil.dart';
 import 'network/spersonnel/httpspersonnel.dart';
 import 'network/spersonnel/resultbean/config_entity.dart';
@@ -31,6 +31,7 @@ class MyApp extends StatelessWidget {
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: MyHomePage(title: 'Flutter Demo Home Page'),
+      routes: {"login":(context)=>LoginHomePage(),"index":(context)=>IndexPage()},
     );
   }
 }
@@ -54,7 +55,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   AnimationController controller; //动画控制器
 
-  bool LoginFirstLaunch = true; //是否第一次启用App
+  bool LoginFirstLaunch ; //是否第一次启用App
+
+  int state1 = 0; //标记是否登录 0隐藏，1显示
+  int state2 = 0; //标记是否登录 0隐藏，1显示
 
   ///是否需要引导页
   @override
@@ -67,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             left: 50,
             right: 50,
             child: Offstage(
-              offstage: false, //false  显示  true 隐藏
+              offstage: !(state1==1), //false  显示  true 隐藏
               // child: Image.asset("assets/images/start_image_bg.png"),
               child: FadeTransition(
                 ///渐变动画
@@ -81,60 +85,64 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ),
             ),
           ),
-          Offstage(
-            ///引导页
-            offstage: !LoginFirstLaunch, //true 隐藏，false 展示
-            child: Swiper(
-              //轮播图
-              loop: false,
-              //是否循环
-              // autoplay: true,//自动播放
-              itemBuilder: (BuildContext context, int index) {
-                if (index != 2) {
-                  //不是最后一页时只展示图片
-                  return new Image.asset(
-                    guideImgs[index],
-                    fit: BoxFit.cover,
-                  );
-                } else {
-                  //最后一页时展示按钮
-                  return Stack(
-                    alignment: Alignment(0, 0), //居中展示
-                    fit: StackFit.expand,
-                    children: <Widget>[
-                      Image.asset(
-                        guideImgs[index],
-                        fit: BoxFit.fitHeight,
-                      ),
-                      Positioned(
-                        bottom: 50,
-                        child: RaisedButton(
-                          child: Text("开启新篇章"),
-                          textColor: Color(0xFF16C192),
-                          color: Color(0xFFFFFFFF),
-                          // splashColor: Colors.black,
-                          highlightColor: Colors.green,
-                          onPressed: (){
-                            beginNewWorld();
-                          },
-                          shape: RoundedRectangleBorder(
-                              side: BorderSide(
-                                  color: Color(0xFF28CA9E), width: 0.2)),
+          Container(
+            child: Offstage(
+              ///引导页
+              offstage: !(state2==1), //true 隐藏，false 展示
+              // offstage: guideIsShow, //true 隐藏，false 展示
+              child: Swiper(
+                //轮播图
+                loop: false,
+                //是否循环
+                // autoplay: true,//自动播放
+                itemBuilder: (BuildContext context, int index) {
+                  if (index != 2) {
+                    //不是最后一页时只展示图片
+                    return new Image.asset(
+                      guideImgs[index],
+                      fit: BoxFit.cover,
+                    );
+                  } else {
+                    //最后一页时展示按钮
+                    return Stack(
+                      alignment: Alignment(0, 0), //居中展示
+                      fit: StackFit.expand,
+                      children: <Widget>[
+                        Image.asset(
+                          guideImgs[index],
+                          fit: BoxFit.fitHeight,
                         ),
-                      )
-                    ],
-                  );
-                }
-              },
-              itemCount: this.guideImgs.length,
+                        Positioned(
+                          bottom: 50,
+                          child: RaisedButton(
+                            child: Text("开启新篇章"),
+                            textColor: Color(0xFF16C192),
+                            color: Color(0xFFFFFFFF),
+                            // splashColor: Colors.black,
+                            highlightColor: Colors.green,
+                            onPressed: (){
+                              SpUtil.setSpBoolValue(CacheConsts.LoginFirstLaunch, value: false);
+                              beginNewWorld();
+                            },
+                            shape: RoundedRectangleBorder(
+                                side: BorderSide(
+                                    color: Color(0xFF28CA9E), width: 0.2)),
+                          ),
+                        )
+                      ],
+                    );
+                  }
+                },
+                itemCount: this.guideImgs.length,
 
-              //配置指示器
-              pagination: new SwiperPagination(
-                  builder: DotSwiperPaginationBuilder( //对指示器进行设置
-                      activeColor: Color(0xFF16C192),
-                      color: Color(0xFFEAEAEA))),
+                //配置指示器
+                pagination: new SwiperPagination(
+                    builder: DotSwiperPaginationBuilder( //对指示器进行设置
+                        activeColor: Color(0xFF16C192),
+                        color: Color(0xFFEAEAEA))),
+              ),
             ),
-          ),
+          )
         ],
       ),
     );
@@ -158,24 +166,40 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     //     ///跳转到登录界面
     // }
     // ignore: missing_return
-    Navigator.push(context, MaterialPageRoute(builder: (context) {
-      return LoginHomePage();
+    // Navigator.push(context, MaterialPageRoute(builder: (context) {
+    //   return LoginHomePage();
+    //
+    //   ///跳转到登录界面
+    // }));
+    // Navigator.pushNamed(context, "login");
 
-      ///跳转到登录界面
-    }));
+    Navigator.of(context).pushReplacementNamed("login"); //跳转后无返回
   }
 
   @override
   void initState() {
+
+    setState(()  {
+      isShowGuide();
+    });
     controller =
-        AnimationController(duration: const Duration(seconds: 2), vsync: this);
-    controller.addStatusListener((status) {
+        AnimationController(duration: const Duration(seconds: 3), vsync: this);
+    controller.addStatusListener((status) async {
       //添加监听
       if (status == AnimationStatus.completed) {
         //动画从 controller.forward() 正向执行 结束时会回调此方法
         print("status is completed");
         //反向执行
         //controller.reverse();
+        bool state = await SpUtil.getSpBoolValue(CacheConsts.LoginStatus,value: false);//登录状态
+        if(!LoginFirstLaunch&&state==false){
+          Navigator.of(context).pushReplacementNamed("login"); //跳转后无返回
+        }
+
+        if(state != null&&state==true){
+          autoLogin();
+        }
+
       } else if (status == AnimationStatus.dismissed) {
         //动画从 controller.reverse() 反向执行 结束时会回调此方法
         print("status is dismissed");
@@ -202,8 +226,64 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
    HttpUtil.getInstance().http(SPersonnelURL.GetConfig, HttpMethod.GET,
       onSuccess:(dynamic str) {
         ConfigEntity().fromJson(str);
-        Fluttertoast.showToast(msg: "获取到系统配置项"+json.encode(str));
+        // Fluttertoast.showToast(msg: "获取到系统配置项"+json.encode(str));
       }
    );
+
+    super.initState();
+  }
+
+  //登录后可直接登录
+  autoLogin() async {
+    Map map = Map();
+    String loginEmpNo = await SpUtil.getSpStringValue(CacheConsts.LoginEmpNo);
+    String loginPassword = await SpUtil.getSpStringValue(CacheConsts.LoginPassword);
+    map["EmpNo"] = loginEmpNo;
+    map["Pwd"] = loginPassword;
+    map["SmsCode"] = "0";
+    HttpUtil.getInstance().http(SPersonnelURL.LoginForMobile, HttpMethod.POST,data: map,onSuccess: (value){
+      getPermission();
+    });
+
+  }
+  //获取权限
+  getPermission(){
+    Map map = Map<String, dynamic>();
+    map["platForm"] = "1";
+    HttpUtil.getInstance().http( /// 获取体系配置信息
+        SPersonnelURL.GetSystemTagConfig,
+        HttpMethod.GET,
+        data: {"platForm": "1"},
+        onSuccess: (dynamic str){
+          SpUtil.setSpStrValue(CacheConsts.LoginSystemTagConfig, json.encode(str));//保存体系配置信息
+          HttpUtil.getInstance().http(///获取人员菜单权限
+              SPersonnelURL.GetEmpNavMenuList,
+              HttpMethod.GET,
+              data: {"platForm": "1"},
+              onSuccess: (dynamic str){
+                SpUtil.setSpBoolValue(CacheConsts.LoginStatus, value: true);//标记登录状态
+                // Navigator.of(context).push(MaterialPageRoute(builder:(context) {
+                //   return(IndexPage());
+                // }));
+                Navigator.of(context).pushReplacementNamed("index");//跳转后不能返回
+              }
+          );
+        }
+    );
+  }
+
+
+  Future<bool> isShowGuide() async {
+     LoginFirstLaunch = await SpUtil.getSpBoolValue(CacheConsts.LoginFirstLaunch,value: true);//默认返回true
+    setState(() {
+      if(LoginFirstLaunch){
+        state1 = 0;
+        state2 = 1;
+      }else{
+        state1 = 1;
+        state2 = 0;
+      }
+    });
+    return LoginFirstLaunch;
   }
 }
