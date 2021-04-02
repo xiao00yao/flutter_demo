@@ -52,7 +52,7 @@ class HttpUtil {
     options = BaseOptions(
         baseUrl: baseUrl,
         connectTimeout: 10000,
-        receiveTimeout: 3000,
+        receiveTimeout: 10000,
         headers: {
           "ERPVersion": "V1", //默认V1  其他的需要监听地址重写
           "PlatForm": "2", //安卓端
@@ -171,14 +171,14 @@ class HttpUtil {
     ));
 
     ///代理  打版本是需注释掉 比较麻烦
-    (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
-        (client) {
-      // config the http client
-      client.findProxy = (uri) {
-        //proxy all request to localhost:8888
-        return "PROXY 192.168.10.28:8888"; //这里将localhost设置为自己电脑的IP，其他不变，注意上线的时候一定记得把代理去掉
-      };
-    };
+    // (dio.httpClientAdapter as DefaultHttpClientAdapter).onHttpClientCreate =
+    //     (client) {
+    //   // config the http client
+    //   client.findProxy = (uri) {
+    //     //proxy all request to localhost:8888
+    //     return "PROXY 192.168.10.28:8888"; //这里将localhost设置为自己电脑的IP，其他不变，注意上线的时候一定记得把代理去掉
+    //   };
+    // };
   }
 
   final String SecretKey = "E10ADC3949BA59ABBE56E057F20F883E";

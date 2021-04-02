@@ -254,6 +254,13 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "4.3.3"
+  pulltorefresh_flutter:
+    dependency: "direct main"
+    description:
+      name: pulltorefresh_flutter
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "0.1.9"
   shake_animation_widget:
     dependency: "direct main"
     description:
